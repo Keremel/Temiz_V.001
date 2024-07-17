@@ -1,63 +1,104 @@
 import pyodbc
-from Temiz.Entity.CikisFisi import CikisFisi
 
 class CikisFisiRepository:
     def __init__(self, connection_string):
         self.connection_string = connection_string
 
-    def connect(self):
-        return pyodbc.connect(self.connection_string)
+    def get_last_fis_numarasi(self):
+        query = "SELECT TOP 1 FisNo FROM CikisFisi ORDER BY FisNo DESC"
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            result = cursor.fetchone()
+            return result[0] if result else None
 
     def save(self, cikis_fisi):
-        try:
-            conn = self.connect()
+        query = """
+        INSERT INTO CikisFisi (FisNo, FisTarihi, Stokkod, Stokad, birim, miktar, BirimFiyat, ToplamTutar)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """
+        with pyodbc.connect(self.connection_string) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
-                INSERT INTO CikisFisi (FisNumarasi, StokKodu, StokAdi, Miktar, Birim, BirimFiyati, ToplamTutar, Barkod, Tarih)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (
-                cikis_fisi.fis_numarasi, cikis_fisi.stok_kodu, cikis_fisi.stok_adi, cikis_fisi.miktar, cikis_fisi.birim,
-                cikis_fisi.birim_fiyati, cikis_fisi.toplam_tutar, cikis_fisi.barkod, cikis_fisi.tarih
-            ))
+            cursor.execute(query, (cikis_fisi.fis_no, cikis_fisi.fis_tarihi, cikis_fisi.stokkod, cikis_fisi.stokad,
+                                   cikis_fisi.birim, cikis_fisi.miktar, cikis_fisi.birim_fiyat, cikis_fisi.toplam_tutar))
             conn.commit()
-        except pyodbc.Error as e:
-            raise Exception(f'Bir hata oluştu: {e}')
-        finally:
-            conn.close()
+
+    def get_all(self):
+        query = "SELECT * FROM CikisFisi"
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            return cursor.fetchall()
+
+    def check_stok_kodu(self, stokkod):
+        query = "SELECT COUNT(*) FROM StokKarti WHERE Stokkod = ?"
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (stokkod,))
+            result = cursor.fetchone()
+            return result[0] > 0
+
+    def check_stok_adi(self, stokad):
+        query = "SELECT COUNT(*) FROM StokKarti WHERE Stokad = ?"
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (stokad,))
+            result = cursor.fetchone()
+            return result[0] > 0
+
+    def check_stok_kodu_adi(self, stokkod, stokad):
+        query = "SELECT COUNT(*) FROM StokKarti WHERE Stokkod = ? AND Stokad = ?"
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (stokkod, stokad))
+            result = cursor.fetchone()
+            return result[0] > 0
+
+    def get_fis_details(self, fis_no):
+        query = """
+        SELECT Stokkod, Stokad, miktar, birim, FisNo, FisTarihi
+        FROM CikisFisi
+        WHERE FisNo = ?
+        """
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query, (fis_no,))
+            return cursor.fetchall()
+
+    def get_all_fis_details(self):
+        query = """
+        SELECT Stokkod, Stokad, miktar, birim, FisNo, FisTarihi
+        FROM CikisFisi
+        """
+        with pyodbc.connect(self.connection_string) as conn:
+            cursor = conn.cursor()
+            cursor.execute(query)
+            return cursor.fetchall()
 
     def find_all(self):
-        try:
-            conn = self.connect()
+        query = "SELECT * FROM CikisFisi"
+        with pyodbc.connect(self.connection_string) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT * FROM CikisFisi')
+            cursor.execute(query)
             rows = cursor.fetchall()
-            return [CikisFisi(*row) for row in rows]
-        except pyodbc.Error as e:
-            raise Exception(f'Bir hata oluştu: {e}')
-        finally:
-            conn.close()
+            cikis_fisleri = []
+            for row in rows:
+                cikis_fisleri.append({
+                    'fis_no': row.FisNo,
+                    'fis_tarihi': row.FisTarihi,
+                    'stokkod': row.Stokkod,
+                    'stokad': row.Stokad,
+                    'birim': row.birim,
+                    'miktar': row.miktar,
+                    'birim_fiyat': row.BirimFiyat,
+                    'toplam_tutar': row.ToplamTutar
+                })
+            return cikis_fisleri
 
-    def get_last_fis_numarasi(self):
-        try:
-            conn = self.connect()
+    def get_all_fis_details(self):
+        # Bu metodu veritabanından çıkış fişlerini almak için ekliyoruz.
+        with pyodbc.connect(self.connection_string) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT TOP 1 FisNumarasi FROM CikisFisi ORDER BY FisNumarasi DESC')
-            row = cursor.fetchone()
-            return row[0] if row else None
-        except pyodbc.Error as e:
-            raise Exception(f'Bir hata oluştu: {e}')
-        finally:
-            conn.close()
-
-    def check_stok_kodu(self, stok_kodu):
-        try:
-            conn = self.connect()
-            cursor = conn.cursor()
-            cursor.execute('SELECT COUNT(*) FROM StokKarti WHERE StokKod = ?', (stok_kodu,))
-            return cursor.fetchone()[0] > 0
-        except pyodbc.Error as e:
-            raise Exception(f'Bir hata oluştu: {e}')
-        finally:
-            conn.close()
-
-    # Diğer check metotlarını buraya ekleyin (eğer gerekliyse)
+            cursor.execute("SELECT * FROM CikisFisi")
+            rows = cursor.fetchall()
+        return rows

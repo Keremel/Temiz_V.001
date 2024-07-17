@@ -6,6 +6,7 @@ from Service.CariKarti_Service import CariKartiService
 from Service.GirisFisi_Service import GirisFisiService
 from Service.CikisFisi_Service import CikisFisiService
 from Service.StokKarti_Service import StokKartiService
+from Service.StokHareketleri_Service import StokHareketleriService
 from Repository.CariKarti_Repository import CariKartiRepository
 from Repository.GirisFisi_Repository import GirisFisiRepository
 from Repository.CikisFisi_Repository import CikisFisiRepository
@@ -16,9 +17,10 @@ from Entity.CariBulWidget import CariBulWidget
 from Entity.StokGorWidget import StokGorWidget
 from Entity.StokEkleWidget import StokEkleWidget
 from Entity.GirisFisiWidget import GirisFisiWidget
-from Entity.GirisFisiGorWidget import GirisFisiGorWidget
+from Entity.GirisFisiGorWidget import GirisFisiGorWidget  # Yeni eklenen widget
 from Entity.CikisFisiWidget import CikisFisiWidget
-from Entity.YapilanCikisFisleriWidget import YapilanCikisFisleriWidget  # Yeni eklenen import
+from Entity.CikisFisiGorWidget import CikisFisiGorWidget
+from Entity.StokHareketleriWidget import StokHareketleriWidget  # Yeni eklenen widget
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -31,6 +33,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.giris_fisi_service = GirisFisiService(GirisFisiRepository(connection_string))
         self.cikis_fisi_service = CikisFisiService(CikisFisiRepository(connection_string))
         self.stok_karti_service = StokKartiService(StokKartiRepository(connection_string))
+        self.stok_hareketleri_service = StokHareketleriService(GirisFisiRepository(connection_string), CikisFisiRepository(connection_string))
 
     def initUI(self):
         self.actionCariler.triggered.connect(self.cari_gor)
@@ -42,6 +45,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.actionYap_lan_Giri_Fi_leri.triggered.connect(self.yapilan_giris_fisleri)
         self.action_k_Fi_i.triggered.connect(self.cikis_fisi)
         self.actionYap_lan_k_fi_leri.triggered.connect(self.yapilan_cikis_fisleri)
+        self.actionStok_Haraket_Takip.triggered.connect(self.stok_hareketleri)
 
     def set_central_widget(self, widget):
         if self.current_widget is not None:
@@ -101,25 +105,33 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def yapilan_giris_fisleri(self):
         try:
-            giris_fisleri = self.giris_fisi_service.get_all_giris_fisleri()
-            widget = GirisFisiGorWidget(giris_fisleri, self.giris_fisi_service)
+            widget = GirisFisiGorWidget(service=self.giris_fisi_service)  # Yalnızca servis parametresi geçiliyor
             self.set_central_widget(widget)
         except Exception as e:
             QMessageBox.critical(self, 'Hata', f'Bir hata oluştu: {e}')
 
     def cikis_fisi(self):
         try:
-            widget = CikisFisiWidget(self.cikis_fisi_service)  # CikisFisiWidget kullanımı
+            widget = CikisFisiWidget(self.cikis_fisi_service)
             self.set_central_widget(widget)
         except Exception as e:
             QMessageBox.critical(self, 'Hata', f'Bir hata oluştu: {e}')
 
     def yapilan_cikis_fisleri(self):
         try:
-            widget = YapilanCikisFisleriWidget(self.cikis_fisi_service)  # YapilanCikisFisleriWidget kullanımı
+            cikis_fisleri = self.cikis_fisi_service.get_all_cikis_fisleri()
+            widget = CikisFisiGorWidget(cikis_fisleri, self.cikis_fisi_service)  # Yeni eklenen widget
             self.set_central_widget(widget)
         except Exception as e:
             QMessageBox.critical(self, 'Hata', f'Bir hata oluştu: {e}')
+
+    def stok_hareketleri(self):
+        try:
+            widget = StokHareketleriWidget(self.stok_hareketleri_service)
+            self.set_central_widget(widget)
+        except Exception as e:
+            QMessageBox.critical(self, 'Hata', f'Bir hata oluştu: {e}')
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

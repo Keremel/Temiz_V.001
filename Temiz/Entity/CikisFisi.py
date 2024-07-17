@@ -1,11 +1,10 @@
 class CikisFisi:
-    def __init__(self, fis_numarasi, stok_kodu, stok_adi, miktar, birim, birim_fiyati, toplam_tutar, barkod, tarih):
-        self.fis_numarasi = fis_numarasi
-        self.stok_kodu = stok_kodu
-        self.stok_adi = stok_adi
+    def __init__(self, fis_no, stokkod, stokad, miktar, birim, birim_fiyat, toplam_tutar, fis_tarihi):
+        self.fis_no = fis_no
+        self.stokkod = stokkod
+        self.stokad = stokad
         self.miktar = miktar
         self.birim = birim
-        self.birim_fiyati = birim_fiyati
+        self.birim_fiyat = birim_fiyat
         self.toplam_tutar = toplam_tutar
-        self.barkod = barkod
-        self.tarih = tarih
+        self.fis_tarihi = fis_tarihi
