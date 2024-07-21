@@ -1,26 +1,30 @@
-# MainWindow.py
 import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QMessageBox
-from Entity.MainWindow_ui import Ui_MainWindow
-from Service.CariKarti_Service import CariKartiService
-from Service.GirisFisi_Service import GirisFisiService
-from Service.CikisFisi_Service import CikisFisiService
-from Service.StokKarti_Service import StokKartiService
-from Service.StokHareketleri_Service import StokHareketleriService
-from Repository.CariKarti_Repository import CariKartiRepository
-from Repository.GirisFisi_Repository import GirisFisiRepository
-from Repository.CikisFisi_Repository import CikisFisiRepository
-from Repository.StokKarti_Repository import StokKartiRepository
-from Entity.CariGorWidget import CariGorWidget
-from Entity.CariEkleWidget import CariEkleWidget
+from Entity.GirisFisi import GirisFisi
 from Entity.CariBulWidget import CariBulWidget
-from Entity.StokGorWidget import StokGorWidget
-from Entity.StokEkleWidget import StokEkleWidget
-from Entity.GirisFisiWidget import GirisFisiWidget
-from Entity.GirisFisiGorWidget import GirisFisiGorWidget  # Yeni eklenen widget
-from Entity.CikisFisiWidget import CikisFisiWidget
+from Entity.CariEkleWidget import CariEkleWidget
+from Entity.CariGorWidget import CariGorWidget
 from Entity.CikisFisiGorWidget import CikisFisiGorWidget
-from Entity.StokHareketleriWidget import StokHareketleriWidget  # Yeni eklenen widget
+from Entity.CikisFisiWidget import CikisFisiWidget
+from Entity.GirisFisiGorWidget import GirisFisiGorWidget
+from Entity.GirisFisiWidget import GirisFisiWidget
+from Entity.MainWindow_ui import Ui_MainWindow
+from Entity.StokEkleWidget import StokEkleWidget
+from Entity.StokGorWidget import StokGorWidget
+from Entity.StokHareketleriWidget import StokHareketleriWidget
+from Repository.CariKarti_Repository import CariKartiRepository
+from Repository.CikisFisi_Repository import CikisFisiRepository
+from Repository.GirisFisi_Repository import GirisFisiRepository
+from Repository.StokKarti_Repository import StokKartiRepository
+from Service.CariKarti_Service import CariKartiService
+from Service.CikisFisi_Service import CikisFisiService
+from Service.GirisFisi_Service import GirisFisiService
+from Service.StokHareketleri_Service import StokHareketleriService
+from Service.StokKarti_Service import StokKartiService
+from Temiz.Entity.CikisFisi import CikisFisi  # Gerekli import işlemi yapılıyor
 
 class MainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self):
@@ -113,6 +117,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
     def cikis_fisi(self):
         try:
             widget = CikisFisiWidget(self.cikis_fisi_service)
+            widget.cikis_fisi_olusturuldu.connect(
+                self.yapilan_cikis_fisleri)  # Yeni çıkış fişi oluşturulunca güncelleme
             self.set_central_widget(widget)
         except Exception as e:
             QMessageBox.critical(self, 'Hata', f'Bir hata oluştu: {e}')
